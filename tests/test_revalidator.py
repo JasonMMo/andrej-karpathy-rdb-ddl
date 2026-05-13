@@ -124,3 +124,29 @@ def test_v004_cross_schema_fk_declared():
     r = {"from": "b", "to": "a", "fk": "a_id", "cross_schema": True}
     diags = revalidate(bp(entities=[a, b], relations=[r]))
     assert not any(d["code"] == "V004" for d in diags)
+
+
+def test_v005_simple_check_postgres_pass():
+    br = {"name": "chk_age", "enforced_by": "age >= 0"}
+    diags = revalidate(bp(business_rules=[br]), dialect="postgres")
+    assert not any(d["code"] == "V005" for d in diags)
+
+
+def test_v005_regex_postgres_pass():
+    br = {"name": "chk_email", "enforced_by": "email ~ '^[^@]+@[^@]+$'"}
+    diags = revalidate(bp(business_rules=[br]), dialect="postgres")
+    assert not any(d["code"] == "V005" for d in diags)
+
+
+def test_v005_regex_hsqldb_warns():
+    br = {"name": "chk_email", "enforced_by": "email ~ '^[^@]+@[^@]+$'"}
+    diags = revalidate(bp(business_rules=[br]), dialect="hsqldb")
+    v005 = [d for d in diags if d["code"] == "V005"]
+    assert len(v005) == 1
+    assert v005[0]["severity"] == "WARN"
+
+
+def test_v005_empty_expression_warns():
+    br = {"name": "chk_x", "enforced_by": ""}
+    diags = revalidate(bp(business_rules=[br]), dialect="postgres")
+    assert any(d["code"] == "V005" for d in diags)
