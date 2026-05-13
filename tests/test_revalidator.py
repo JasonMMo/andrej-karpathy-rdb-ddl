@@ -65,3 +65,28 @@ def test_v002_target_no_pk_error():
     r = {"from": "src", "to": "x", "fk": "x_id"}
     diags = revalidate(bp(entities=[pk_less, src], relations=[r]))
     assert any(d["code"] == "V002" for d in diags)
+
+
+def test_v003_naming_green():
+    e = _ent("customer", [{"name": "id", "type": "bigserial", "pk": True},
+                          {"name": "email", "type": "varchar"}])
+    diags = revalidate(bp(entities=[e]))
+    assert not any(d["code"] == "V003" for d in diags)
+
+
+def test_v003_camel_case_error():
+    e = _ent("Customer", [{"name": "id", "type": "bigserial", "pk": True}])
+    diags = revalidate(bp(entities=[e]))
+    assert any(d["code"] == "V003" for d in diags)
+
+
+def test_v003_reserved_word_error():
+    e = _ent("user", [{"name": "id", "type": "bigserial", "pk": True}])
+    diags = revalidate(bp(entities=[e]))
+    assert any(d["code"] == "V003" for d in diags)
+
+
+def test_v003_too_long_error():
+    e = _ent("a" * 64, [{"name": "id", "type": "bigserial", "pk": True}])
+    diags = revalidate(bp(entities=[e]))
+    assert any(d["code"] == "V003" for d in diags)
