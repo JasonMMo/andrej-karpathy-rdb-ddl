@@ -73,10 +73,52 @@ def _v002_fk_targets(blueprint: dict) -> List[Dict]:
     return diags
 
 
+def _v004_schema(blueprint: dict) -> List[Dict]:
+    diags = []
+    by_name = {e["name"]: e for e in blueprint.get("entities", [])}
+    for e in blueprint.get("entities", []):
+        if not e.get("schema"):
+            diags.append(_diag("V004", "ERROR",
+                               f"entity '{e.get('name')}' missing schema",
+                               entity=e.get("name")))
+    for r in blueprint.get("relations", []):
+        src = by_name.get(r.get("from"))
+        dst = by_name.get(r.get("to"))
+        if not src or not dst:
+            continue
+        if src.get("schema") and dst.get("schema") and src["schema"] != dst["schema"]:
+            if not r.get("cross_schema"):
+                diags.append(_diag("V004", "ERROR",
+                                   f"cross-schema FK {r['from']}->{r['to']} not declared "
+                                   "(set relation.cross_schema: true)",
+                                   relation=r))
+    return diags
+
+
+def _v005_constraints(blueprint: dict, dialect_name: str) -> List[Dict]:
+    d = get_dialect(dialect_name)
+    diags = []
+    for br in blueprint.get("business_rules") or []:
+        expr = (br.get("enforced_by") or "").strip()
+        if not expr:
+            diags.append(_diag("V005", "WARN",
+                               f"business rule '{br.get('name')}' has empty enforced_by",
+                               rule=br.get("name")))
+            continue
+        if "~" in expr and d.regex_op is None:
+            diags.append(_diag("V005", "WARN",
+                               f"business rule '{br.get('name')}' uses regex operator "
+                               f"not supported by dialect '{dialect_name}'",
+                               rule=br.get("name")))
+    return diags
+
+
 def revalidate(blueprint: dict, dialect: str = "postgres") -> List[Dict]:
     diags = []
     for e in blueprint.get("entities", []):
         diags.extend(_v001_pk_exists(e))
         diags.extend(_v003_naming(e))
     diags.extend(_v002_fk_targets(blueprint))
+    diags.extend(_v004_schema(blueprint))
+    diags.extend(_v005_constraints(blueprint, dialect))
     return diags

@@ -90,3 +90,37 @@ def test_v003_too_long_error():
     e = _ent("a" * 64, [{"name": "id", "type": "bigserial", "pk": True}])
     diags = revalidate(bp(entities=[e]))
     assert any(d["code"] == "V003" for d in diags)
+
+
+def test_v004_schema_present_green():
+    e = _ent("customer")
+    e["schema"] = "crm"
+    diags = revalidate(bp(entities=[e]))
+    assert not any(d["code"] == "V004" for d in diags)
+
+
+def test_v004_schema_missing_error():
+    e = _ent("customer")
+    e.pop("schema", None)
+    diags = revalidate(bp(entities=[e]))
+    assert any(d["code"] == "V004" for d in diags)
+
+
+def test_v004_cross_schema_fk_undeclared():
+    a = _ent("a"); a["schema"] = "s1"
+    b = _ent("b", [{"name": "id", "type": "bigserial", "pk": True},
+                   {"name": "a_id", "type": "bigint"}])
+    b["schema"] = "s2"
+    r = {"from": "b", "to": "a", "fk": "a_id"}
+    diags = revalidate(bp(entities=[a, b], relations=[r]))
+    assert any(d["code"] == "V004" for d in diags)
+
+
+def test_v004_cross_schema_fk_declared():
+    a = _ent("a"); a["schema"] = "s1"
+    b = _ent("b", [{"name": "id", "type": "bigserial", "pk": True},
+                   {"name": "a_id", "type": "bigint"}])
+    b["schema"] = "s2"
+    r = {"from": "b", "to": "a", "fk": "a_id", "cross_schema": True}
+    diags = revalidate(bp(entities=[a, b], relations=[r]))
+    assert not any(d["code"] == "V004" for d in diags)
