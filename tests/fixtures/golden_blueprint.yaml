@@ -1,0 +1,29 @@
+version: 1
+project: 골든
+entities:
+  - name: customer
+    table: customer
+    schema: crm
+    domain: [고객관리]
+    preset: 고객관리
+    columns:
+      - {name: id, type: bigserial, pk: true, null: false}
+      - {name: email, type: varchar(255), null: false, unique: true}
+      - {name: created_at, type: timestamp, null: false}
+    indexes:
+      - {name: ix_customer_email, columns: [email], unique: true}
+  - name: address
+    table: address
+    schema: crm
+    domain: [고객관리]
+    preset: 고객관리
+    columns:
+      - {name: id, type: bigserial, pk: true, null: false}
+      - {name: customer_id, type: bigint, null: false}
+      - {name: line1, type: varchar(255), null: false}
+relations:
+  - {from: address, to: customer, fk: customer_id, on_delete: cascade}
+business_rules:
+  - {name: chk_customer_email, applies_to: customer, enforced_by: "email LIKE '%@%'"}
+validation:
+  passed: true
