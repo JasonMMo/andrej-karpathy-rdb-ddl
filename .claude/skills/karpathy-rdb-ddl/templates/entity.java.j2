@@ -1,0 +1,24 @@
+package {{ package }};
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+{% if has_timestamp %}import java.time.LocalDateTime;
+{% endif %}{% if has_date %}import java.time.LocalDate;
+{% endif %}{% if has_bigdecimal %}import java.math.BigDecimal;
+{% endif %}
+
+@Entity
+@Table(name = "{{ entity.table }}", schema = "{{ entity.schema }}")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class {{ class_name }} {
+{% for col in entity.columns %}
+    {% if col.pk %}@Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    {% endif %}@Column(name = "{{ col.name }}"{% if col.null == False %}, nullable = false{% endif %}{% if col.unique %}, unique = true{% endif %})
+    private {{ col.java_type }} {{ col.java_name }};
+
+{% endfor %}}
