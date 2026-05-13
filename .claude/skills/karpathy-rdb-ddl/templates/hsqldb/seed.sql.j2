@@ -1,0 +1,4 @@
+-- Seed for {{ entity.schema }}.{{ entity.table }} (preset, hsqldb)
+{% for row in rows %}
+MERGE INTO {{ entity.schema }}.{{ entity.table }} USING (VALUES({{ row | join(', ') }})) AS s({{ columns | join(', ') }}) ON {{ entity.schema }}.{{ entity.table }}.{{ pk_column }} = s.{{ pk_column }} WHEN NOT MATCHED THEN INSERT ({{ columns | join(', ') }}) VALUES ({{ columns | map('insert_prefix', 's.') | join(', ') }});
+{% endfor %}
