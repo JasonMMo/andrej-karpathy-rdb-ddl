@@ -1,0 +1,6 @@
+-- Seed for {{ entity.schema }}.{{ entity.table }} (preset)
+INSERT INTO {{ entity.schema }}.{{ entity.table }} ({{ columns | join(', ') }}) VALUES
+{%- for row in rows %}
+    ({{ row | join(', ') }}){% if not loop.last %},{% else %}{% endif %}
+{%- endfor %}
+ON CONFLICT DO NOTHING;
