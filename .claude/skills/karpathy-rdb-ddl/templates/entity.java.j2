@@ -18,7 +18,7 @@ public class {{ class_name }} {
 {% for col in entity.columns %}
     {% if col.pk %}@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    {% endif %}@Column(name = "{{ col.name }}"{% if col.null == False %}, nullable = false{% endif %}{% if col.unique %}, unique = true{% endif %})
+    {% endif %}@Column(name = "{{ col.name }}"{% if col.nullable == False %}, nullable = false{% endif %}{% if col.unique %}, unique = true{% endif %})
     private {{ col.java_type }} {{ col.java_name }};
 
 {% endfor %}}
