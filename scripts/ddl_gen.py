@@ -52,39 +52,81 @@ def _gather_indexes(entities_sorted):
     return out
 
 
+_ON_DELETE_SQL = {
+    "restrict": "RESTRICT",
+    "cascade": "CASCADE",
+    "set_null": "SET NULL",
+    "no_action": "NO ACTION",
+    "no action": "NO ACTION",
+}
+
+
+def _fk_column(relation: dict):
+    """Read FK column name from either nested `fk.{column}` (blueprint-spec) or
+    legacy flat `fk: <str>` form."""
+    fk = relation.get("fk")
+    if isinstance(fk, dict):
+        return fk.get("column")
+    return fk
+
+
+def _fk_on_delete(relation: dict) -> str:
+    fk = relation.get("fk")
+    if isinstance(fk, dict) and fk.get("on_delete"):
+        raw = fk["on_delete"]
+    else:
+        raw = relation.get("on_delete") or "restrict"
+    return _ON_DELETE_SQL.get(str(raw).lower(), str(raw).upper())
+
+
 def _gather_foreign_keys(blueprint: dict, by_name):
+    """Identify which side actually owns the FK column.
+
+    blueprint-spec convention: `from`=parent (1), `to`=child (N, holds FK).
+    Legacy convention: `from`=child (N, holds FK), `to`=parent (1).
+    The owner is whichever side has fk_col among its columns; fall back to
+    `from` to preserve legacy behavior when neither has the column."""
     fks = []
     for r in blueprint.get("relations") or []:
-        src = by_name.get(r.get("from"))
-        dst = by_name.get(r.get("to"))
-        if not src or not dst:
+        a = by_name.get(r.get("from"))
+        b = by_name.get(r.get("to"))
+        if not a or not b:
             continue
-        ref_pk = next((c["name"] for c in dst.get("columns") or [] if c.get("pk")), None)
+        fk_col = _fk_column(r) or "unknown"
+        a_has = any(c.get("name") == fk_col for c in (a.get("columns") or []))
+        b_has = any(c.get("name") == fk_col for c in (b.get("columns") or []))
+        if b_has and not a_has:
+            owner, parent = b, a
+        else:
+            owner, parent = a, b
+        ref_pk = next((c["name"] for c in parent.get("columns") or [] if c.get("pk")), None)
         if not ref_pk:
             continue
-        fk_name = f"fk_{src['table']}_{r.get('fk', 'unknown')}"
         fks.append({
-            "name": fk_name,
-            "src_schema": src["schema"], "src_table": src["table"],
-            "column": r.get("fk"),
-            "ref_schema": dst["schema"], "ref_table": dst["table"],
+            "name": f"fk_{owner['table']}_{fk_col}",
+            "src_schema": owner["schema"], "src_table": owner["table"],
+            "column": fk_col,
+            "ref_schema": parent["schema"], "ref_table": parent["table"],
             "ref_column": ref_pk,
-            "on_delete": r.get("on_delete", "no action"),
+            "on_delete": _fk_on_delete(r),
         })
     return fks
 
 
 def _gather_checks(blueprint: dict, by_name):
+    """Read business rules. Supports both legacy `{name, applies_to, enforced_by}`
+    and blueprint-spec `{id, text, enforced_by, source_concept, applies_to?}`."""
     chks = []
     for br in blueprint.get("business_rules") or []:
         expr = (br.get("enforced_by") or "").strip()
         if not expr:
             continue
-        target = by_name.get(br.get("applies_to"))
+        applies_to = br.get("applies_to")
+        target = by_name.get(applies_to)
         if not target:
             continue
         chks.append({
-            "name": br["name"],
+            "name": br.get("name") or br.get("id") or "chk_rule",
             "schema": target["schema"],
             "table": target["table"],
             "expression": expr,
