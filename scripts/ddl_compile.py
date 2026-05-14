@@ -13,10 +13,6 @@ from jpa_gen import generate_jpa
 from seed_gen import generate_seed
 
 
-def _resolve_package(template: str, schema: str) -> str:
-    return template.replace("<schema>", schema)
-
-
 def _write_report(out_dir: pathlib.Path, blueprint: dict, diags: list, dialect: str, stats: dict) -> None:
     errors = [d for d in diags if d["severity"] == "ERROR"]
     warns = [d for d in diags if d["severity"] == "WARN"]
@@ -81,22 +77,23 @@ def main(argv=None) -> int:
             print(f"ERROR {e['code']}: {e['message']}", file=sys.stderr)
         return 1
 
+    from preset_catalog import is_preset, build_domain_index
+    domain_index = build_domain_index(bp)
+
     try:
         generate_ddl(bp, out_dir, dialect=args.dialect)
-        for e in bp.get("entities") or []:
-            pkg = _resolve_package(args.package, e.get("schema", "default"))
-            generate_jpa([e], package=pkg, out_dir=out_dir)
-        generate_seed(bp.get("entities") or [], out_dir, dialect=args.dialect)
+        generate_jpa(bp.get("entities") or [], package=args.package, out_dir=out_dir)
+        generate_seed(bp.get("entities") or [], out_dir,
+                      dialect=args.dialect, domain_index=domain_index)
     except Exception as e:
         print(f"ERROR: template/IO failure: {e}", file=sys.stderr)
         return 3
 
-    from preset_catalog import is_preset
     stats = {
         "entities": len(bp.get("entities") or []),
         "relations": len(bp.get("relations") or []),
         "schemas": len({e["schema"] for e in bp.get("entities") or [] if e.get("schema")}),
-        "seeds": sum(1 for e in bp.get("entities") or [] if is_preset(e)),
+        "seeds": sum(1 for e in bp.get("entities") or [] if is_preset(e, domain_index)),
     }
     _write_report(out_dir, bp, diags, args.dialect, stats)
     print(f"OK: wrote {out_dir} (dialect={args.dialect})")
