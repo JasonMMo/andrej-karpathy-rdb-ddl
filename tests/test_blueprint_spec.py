@@ -18,13 +18,13 @@ def _bp_spec():
         "entities": [
             {"name": "customer", "table": "customer", "schema": "crm",
              "columns": [
-                 {"name": "id", "type": "bigserial", "pk": True, "null": False},
-                 {"name": "email", "type": "varchar(255)", "null": False},
+                 {"name": "id", "type": "bigserial", "pk": True, "nullable": False},
+                 {"name": "email", "type": "varchar(255)", "nullable": False},
              ]},
             {"name": "address", "table": "address", "schema": "crm",
              "columns": [
-                 {"name": "id", "type": "bigserial", "pk": True, "null": False},
-                 {"name": "customer_id", "type": "bigint", "null": False},
+                 {"name": "id", "type": "bigserial", "pk": True, "nullable": False},
+                 {"name": "customer_id", "type": "bigint", "nullable": False},
              ]},
         ],
         "relations": [
@@ -73,7 +73,7 @@ def test_v002_errors_when_fk_column_missing_from_both_sides():
     # Strip the FK column from address — it should fail V002 even though target
     # has a PK, because no entity owns the FK column.
     bp["entities"][1]["columns"] = [
-        {"name": "id", "type": "bigserial", "pk": True, "null": False},
+        {"name": "id", "type": "bigserial", "pk": True, "nullable": False},
     ]
     diags = revalidate(bp)
     v002 = [d for d in diags if d["code"] == "V002"]
@@ -87,3 +87,34 @@ def test_seed_generated_from_domain_index(tmp_path):
     generate_seed(bp["entities"], tmp_path, dialect="postgres", domain_index=idx)
     assert (tmp_path / "seed" / "01_customer_sample.sql").exists()
     assert (tmp_path / "seed" / "01_address_sample.sql").exists()
+
+
+def test_legacy_null_key_string_form_emits_not_null(tmp_path):
+    """Legacy column dict with string key 'null': False must produce NOT NULL DDL."""
+    from ddl_gen import generate_ddl
+    entities = [{
+        "name": "customer", "schema": "public", "table": "customer",
+        "columns": [
+            {"name": "id", "type": "bigserial", "pk": True, "null": False},
+            {"name": "email", "type": "varchar(255)", "null": False, "unique": True},
+        ],
+    }]
+    generate_ddl({"entities": entities, "relations": [], "business_rules": []}, tmp_path, dialect="postgres")
+    sql = (tmp_path / "migrations" / "V002__create_tables.sql").read_text(encoding="utf-8")
+    assert "id BIGSERIAL PRIMARY KEY NOT NULL" in sql
+    assert "email VARCHAR(255) NOT NULL" in sql
+
+
+def test_legacy_null_key_none_form_emits_not_null(tmp_path):
+    """Column dict with Python None key (from YAML `null:` literal) must still produce NOT NULL."""
+    from ddl_gen import generate_ddl
+    entities = [{
+        "name": "customer", "schema": "public", "table": "customer",
+        "columns": [
+            {"name": "id", "type": "bigserial", "pk": True, None: False},
+            {"name": "email", "type": "varchar(255)", None: False},
+        ],
+    }]
+    generate_ddl({"entities": entities, "relations": [], "business_rules": []}, tmp_path, dialect="postgres")
+    sql = (tmp_path / "migrations" / "V002__create_tables.sql").read_text(encoding="utf-8")
+    assert "email VARCHAR(255) NOT NULL" in sql
