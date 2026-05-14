@@ -18,7 +18,8 @@ def _sample_value(col: dict, row_idx: int) -> str:
     return f"'sample{row_idx + 1}'"
 
 
-def generate_seed(entities, out_dir: pathlib.Path, dialect: str = "postgres") -> None:
+def generate_seed(entities, out_dir: pathlib.Path, dialect: str = "postgres",
+                  domain_index=None) -> None:
     out_dir = pathlib.Path(out_dir)
     (out_dir / "seed").mkdir(parents=True, exist_ok=True)
     d = get_dialect(dialect)
@@ -32,7 +33,7 @@ def generate_seed(entities, out_dir: pathlib.Path, dialect: str = "postgres") ->
     tpl = env.get_template("seed.sql.j2")
 
     for e in entities:
-        if not is_preset(e):
+        if not is_preset(e, domain_index):
             continue
         non_pk_cols = [c for c in e.get("columns") or [] if not c.get("pk")]
         if not non_pk_cols:
