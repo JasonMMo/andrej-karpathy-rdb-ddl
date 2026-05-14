@@ -1,11 +1,14 @@
 version: 1
+generated_at: 2026-05-14T00:00:00Z
 project: 골든
+domains:
+  - name: 고객관리
+    description: 고객/주소 관리 도메인
+    entities: [customer, address]
 entities:
   - name: customer
     table: customer
     schema: crm
-    domain: [고객관리]
-    preset: 고객관리
     columns:
       - {name: id, type: bigserial, pk: true, null: false}
       - {name: email, type: varchar(255), null: false, unique: true}
@@ -15,15 +18,31 @@ entities:
   - name: address
     table: address
     schema: crm
-    domain: [고객관리]
-    preset: 고객관리
     columns:
       - {name: id, type: bigserial, pk: true, null: false}
       - {name: customer_id, type: bigint, null: false}
       - {name: line1, type: varchar(255), null: false}
 relations:
-  - {from: address, to: customer, fk: customer_id, on_delete: cascade}
+  - from: customer
+    to: address
+    cardinality: 1:N
+    fk:
+      column: customer_id
+      on_delete: cascade
+    concept_name: customer-has-many-addresses
 business_rules:
-  - {name: chk_customer_email, applies_to: customer, enforced_by: "email LIKE '%@%'"}
+  - id: BR-001
+    name: chk_customer_email
+    text: 고객 이메일은 '@'를 포함해야 한다
+    applies_to: customer
+    enforced_by: "email LIKE '%@%'"
+    source_concept: customer-email-format
+sources:
+  - id: SRC-001
+    file: domains/고객관리/profile.md
+    title: 고객관리 도메인 정의
 validation:
   passed: true
+  errors: []
+  warnings: []
+  infos: []
