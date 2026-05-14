@@ -44,8 +44,12 @@ def generate_jpa(entities, package: str, out_dir: pathlib.Path) -> None:
                 "java_type": _java_type(c.get("type", "")),
                 "java_name": _camel(c.get("name", "")),
             }
+            if None in c2:
+                c2["nullable"] = c2.pop(None)
+            if "null" in c2 and "nullable" not in c2:
+                c2["nullable"] = c2.pop("null")
             c2.setdefault("pk", False)
-            c2.setdefault("null", True)
+            c2.setdefault("nullable", True)
             c2.setdefault("unique", False)
             cols_render.append(c2)
         types = {c["java_type"] for c in cols_render}
