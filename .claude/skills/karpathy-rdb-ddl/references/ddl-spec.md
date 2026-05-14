@@ -3,6 +3,22 @@
 ## Inputs
 - `<wiki_path>/_blueprint.yaml` (Stage 1 output, must have `validation.passed: true`)
 
+### Expected blueprint fields (per Stage 1's `blueprint-spec.md`)
+
+| field | purpose in Stage 2 |
+| :-- | :-- |
+| `version` | must equal `1`; loader rejects others |
+| `project` | rendered in `ddl-report.md` header |
+| `domains[].entities[]` | maps entity → domains (preset seed selection). Legacy `entity.domain` still accepted. |
+| `entities[].columns[]` | drives `CREATE TABLE`, JPA fields, seed columns |
+| `entities[].indexes[]` | drives `V003__create_indexes.sql` |
+| `relations[].fk.column` | FK column name. Legacy flat `fk: <column>` still accepted. |
+| `relations[].fk.on_delete` | `restrict` (default) \| `cascade` \| `set_null` \| `no_action` |
+| `relations[].cardinality` | informational only; FK ownership is resolved by which side holds the column |
+| `business_rules[].enforced_by` | string SQL → emitted as `CHECK`; list form (constraint/index names) skipped |
+| `business_rules[].id` or `name` | used as constraint name (falls back to `chk_rule`) |
+| `business_rules[].applies_to` | entity that receives the `CHECK` |
+
 ## Outputs (under `--out`, default `./db/`)
 - `migrations/V001__create_schema.sql` — CREATE SCHEMA statements
 - `migrations/V002__create_tables.sql` — CREATE TABLE (toposort order)
