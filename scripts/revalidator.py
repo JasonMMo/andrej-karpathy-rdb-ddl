@@ -55,6 +55,14 @@ def _v003_naming(entity: dict) -> List[Dict]:
     return diags
 
 
+def _fk_column(relation: dict):
+    """Accept both nested `fk.{column}` (blueprint-spec) and legacy flat `fk: <str>`."""
+    fk = relation.get("fk")
+    if isinstance(fk, dict):
+        return fk.get("column")
+    return fk
+
+
 def _v002_fk_targets(blueprint: dict) -> List[Dict]:
     diags = []
     by_name = {e["name"]: e for e in blueprint.get("entities", [])}
@@ -70,6 +78,21 @@ def _v002_fk_targets(blueprint: dict) -> List[Dict]:
             diags.append(_diag("V002", "ERROR",
                                f"relation {r.get('from')}->{r.get('to')}: target has no PK",
                                relation=r))
+            continue
+        fk_col = _fk_column(r)
+        if fk_col:
+            src = by_name.get(r.get("from"))
+            src_cols = (src.get("columns") if src else None) or []
+            tgt_cols = target.get("columns") or []
+            on_src = any(c.get("name") == fk_col for c in src_cols)
+            on_tgt = any(c.get("name") == fk_col for c in tgt_cols)
+            # Accept either convention: blueprint-spec (fk on `to`, the N-side)
+            # or legacy (fk on `from`, the N-side).
+            if not (on_src or on_tgt):
+                diags.append(_diag("V002", "ERROR",
+                                   f"relation {r.get('from')}->{r.get('to')}: fk column "
+                                   f"'{fk_col}' not found on either side",
+                                   relation=r))
     return diags
 
 
@@ -99,17 +122,23 @@ def _v005_constraints(blueprint: dict, dialect_name: str) -> List[Dict]:
     d = get_dialect(dialect_name)
     diags = []
     for br in blueprint.get("business_rules") or []:
-        expr = (br.get("enforced_by") or "").strip()
+        rid = br.get("name") or br.get("id")
+        raw_expr = br.get("enforced_by")
+        # blueprint-spec puts enforced_by as a list of constraint/index names.
+        # Legacy puts a SQL expression as a string. Skip lint for list form.
+        if isinstance(raw_expr, list):
+            continue
+        expr = (raw_expr or "").strip()
         if not expr:
             diags.append(_diag("V005", "WARN",
-                               f"business rule '{br.get('name')}' has empty enforced_by",
-                               rule=br.get("name")))
+                               f"business rule '{rid}' has empty enforced_by",
+                               rule=rid))
             continue
         if "~" in expr and d.regex_op is None:
             diags.append(_diag("V005", "WARN",
-                               f"business rule '{br.get('name')}' uses regex operator "
+                               f"business rule '{rid}' uses regex operator "
                                f"not supported by dialect '{dialect_name}'",
-                               rule=br.get("name")))
+                               rule=rid))
     return diags
 
 
