@@ -10,18 +10,18 @@ entities:
     table: customer
     schema: crm
     columns:
-      - {name: id, type: bigserial, pk: true, null: false}
-      - {name: email, type: varchar(255), null: false, unique: true}
-      - {name: created_at, type: timestamp, null: false}
+      - {name: id, type: bigserial, pk: true, nullable: false}
+      - {name: email, type: varchar(255), nullable: false, unique: true}
+      - {name: created_at, type: timestamp, nullable: false}
     indexes:
       - {name: ix_customer_email, columns: [email], unique: true}
   - name: address
     table: address
     schema: crm
     columns:
-      - {name: id, type: bigserial, pk: true, null: false}
-      - {name: customer_id, type: bigint, null: false}
-      - {name: line1, type: varchar(255), null: false}
+      - {name: id, type: bigserial, pk: true, nullable: false}
+      - {name: customer_id, type: bigint, nullable: false}
+      - {name: line1, type: varchar(255), nullable: false}
 relations:
   - from: customer
     to: address
