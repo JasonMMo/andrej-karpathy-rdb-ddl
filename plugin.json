@@ -1,6 +1,6 @@
 {
   "name": "andrej-karpathy-rdb-ddl",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Stage 2: PostgreSQL/HSQLDB DDL + Flyway + JPA Entity + seed SQL generator from _blueprint.yaml",
   "author": "business-fullstack-creater pipeline",
   "commands": [".claude/commands"],
