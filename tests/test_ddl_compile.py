@@ -17,8 +17,8 @@ def write_blueprint(tmp_path, passed=True):
             domain: [고객관리]
             preset: 고객관리
             columns:
-              - {{name: id, type: bigserial, pk: true, null: false}}
-              - {{name: email, type: 'varchar(255)', null: false}}
+              - {{name: id, type: bigserial, pk: true, nullable: false}}
+              - {{name: email, type: 'varchar(255)', nullable: false}}
             indexes:
               - {{name: ix_email, columns: [email], unique: true}}
         relations: []

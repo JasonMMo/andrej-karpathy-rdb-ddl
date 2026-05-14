@@ -7,9 +7,9 @@ def make_entities():
     return [{
         "name": "customer", "table": "customer", "schema": "crm",
         "columns": [
-            {"name": "id", "type": "bigserial", "pk": True, "null": False},
-            {"name": "email", "type": "varchar(255)", "null": False, "unique": True},
-            {"name": "created_at", "type": "timestamp", "null": False},
+            {"name": "id", "type": "bigserial", "pk": True, "nullable": False},
+            {"name": "email", "type": "varchar(255)", "nullable": False, "unique": True},
+            {"name": "created_at", "type": "timestamp", "nullable": False},
         ],
     }]
 

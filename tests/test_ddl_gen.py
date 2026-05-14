@@ -8,14 +8,14 @@ def make_blueprint():
         "entities": [
             {"name": "customer", "table": "customer", "schema": "crm",
              "columns": [
-                 {"name": "id", "type": "bigserial", "pk": True, "null": False},
-                 {"name": "email", "type": "varchar(255)", "null": False},
+                 {"name": "id", "type": "bigserial", "pk": True, "nullable": False},
+                 {"name": "email", "type": "varchar(255)", "nullable": False},
              ],
              "indexes": [{"name": "ix_customer_email", "columns": ["email"], "unique": True}]},
             {"name": "address", "table": "address", "schema": "crm",
              "columns": [
-                 {"name": "id", "type": "bigserial", "pk": True, "null": False},
-                 {"name": "customer_id", "type": "bigint", "null": False},
+                 {"name": "id", "type": "bigserial", "pk": True, "nullable": False},
+                 {"name": "customer_id", "type": "bigint", "nullable": False},
              ]},
         ],
         "relations": [

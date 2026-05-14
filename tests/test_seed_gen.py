@@ -9,7 +9,7 @@ def make_entities():
             "domain": ["고객관리"], "preset": "고객관리",
             "columns": [
                 {"name": "id", "type": "bigserial", "pk": True},
-                {"name": "email", "type": "varchar(255)", "null": False},
+                {"name": "email", "type": "varchar(255)", "nullable": False},
             ],
         },
         {
