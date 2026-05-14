@@ -20,6 +20,11 @@ def _normalize_columns(entity: dict, dialect) -> list:
     cols = []
     for c in entity.get("columns") or []:
         c2 = dict(c)
+        # Legacy / mis-quoted YAML may surface `null` as Python None key or string "null"
+        if None in c2:
+            c2["nullable"] = c2.pop(None)
+        if "null" in c2 and "nullable" not in c2:
+            c2["nullable"] = c2.pop("null")
         raw_type = c.get("type", "").strip()
         base = raw_type.split("(")[0].lower()
         mapped = dialect.type_map.get(base, raw_type.upper())
@@ -28,7 +33,7 @@ def _normalize_columns(entity: dict, dialect) -> list:
         c2["sql_type"] = mapped
         # Ensure template attributes are defined to avoid StrictUndefined errors
         c2.setdefault("pk", False)
-        c2.setdefault("null", True)
+        c2.setdefault("nullable", True)
         c2.setdefault("default", None)
         cols.append(c2)
     return cols
