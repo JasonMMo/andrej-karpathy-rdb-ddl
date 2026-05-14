@@ -10,7 +10,7 @@
 | `version` | must equal `1`; loader rejects others |
 | `project` | rendered in `ddl-report.md` header |
 | `domains[].entities[]` | maps entity → domains (preset seed selection). Legacy `entity.domain` still accepted. |
-| `entities[].columns[]` | drives `CREATE TABLE`, JPA fields, seed columns |
+| `entities[].columns[]` | drives `CREATE TABLE`, JPA fields, seed columns. `nullable: false` emits `NOT NULL` (legacy `null:` key tolerated). |
 | `entities[].indexes[]` | drives `V003__create_indexes.sql` |
 | `relations[].fk.column` | FK column name. Legacy flat `fk: <column>` still accepted. |
 | `relations[].fk.on_delete` | `restrict` (default) \| `cascade` \| `set_null` \| `no_action` |
