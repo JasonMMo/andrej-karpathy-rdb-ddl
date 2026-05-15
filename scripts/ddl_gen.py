@@ -66,13 +66,22 @@ _ON_DELETE_SQL = {
 }
 
 
-def _fk_column(relation: dict):
-    """Read FK column name from either nested `fk.{column}` (blueprint-spec) or
-    legacy flat `fk: <str>` form."""
+def _fk_columns(relation: dict):
+    """Return FK column(s) as a list. Accepts:
+    - nested {fk: {column: 'x'}}  → ['x']
+    - nested {fk: {column: ['a','b']}} → ['a','b']
+    - legacy flat {fk: 'x'} → ['x']
+    """
     fk = relation.get("fk")
     if isinstance(fk, dict):
-        return fk.get("column")
-    return fk
+        col = fk.get("column")
+    else:
+        col = fk
+    if col is None:
+        return []
+    if isinstance(col, list):
+        return list(col)
+    return [col]
 
 
 def _fk_on_delete(relation: dict) -> str:
@@ -85,34 +94,39 @@ def _fk_on_delete(relation: dict) -> str:
 
 
 def _gather_foreign_keys(blueprint: dict, by_name):
-    """Identify which side actually owns the FK column.
+    """Identify which side actually owns the FK column(s).
 
-    blueprint-spec convention: `from`=parent (1), `to`=child (N, holds FK).
-    Legacy convention: `from`=child (N, holds FK), `to`=parent (1).
-    The owner is whichever side has fk_col among its columns; fall back to
-    `from` to preserve legacy behavior when neither has the column."""
+    blueprint-spec convention: from=parent (1), to=child (N, holds FK).
+    Legacy convention: from=child (N, holds FK), to=parent (1).
+    Owner is whichever side has ALL fk_cols among its columns; fall back to
+    `from` to preserve legacy behavior when neither has them.
+    """
     fks = []
     for r in blueprint.get("relations") or []:
         a = by_name.get(r.get("from"))
         b = by_name.get(r.get("to"))
         if not a or not b:
             continue
-        fk_col = _fk_column(r) or "unknown"
-        a_has = any(c.get("name") == fk_col for c in (a.get("columns") or []))
-        b_has = any(c.get("name") == fk_col for c in (b.get("columns") or []))
-        if b_has and not a_has:
+        fk_cols = _fk_columns(r)
+        if not fk_cols:
+            continue
+        a_names = {c.get("name") for c in (a.get("columns") or [])}
+        b_names = {c.get("name") for c in (b.get("columns") or [])}
+        if all(c in b_names for c in fk_cols) and not all(c in a_names for c in fk_cols):
             owner, parent = b, a
         else:
             owner, parent = a, b
-        ref_pk = next((c["name"] for c in parent.get("columns") or [] if c.get("pk")), None)
-        if not ref_pk:
+        ref_pks = [c["name"] for c in parent.get("columns") or [] if c.get("pk")]
+        if not ref_pks:
             continue
+        # composite FK references composite PK — assume positional pairing
+        ref_cols = ref_pks if len(fk_cols) > 1 else [ref_pks[0]]
         fks.append({
-            "name": f"fk_{owner['table']}_{fk_col}",
+            "name": f"fk_{owner['table']}__{'_'.join(fk_cols)}",
             "src_schema": owner["schema"], "src_table": owner["table"],
-            "column": fk_col,
+            "columns": fk_cols,
             "ref_schema": parent["schema"], "ref_table": parent["table"],
-            "ref_column": ref_pk,
+            "ref_columns": ref_cols,
             "on_delete": _fk_on_delete(r),
         })
     return fks
