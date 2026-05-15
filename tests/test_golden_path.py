@@ -27,7 +27,7 @@ def test_golden_postgres(tmp_path):
     ]:
         assert (tmp_path / f).exists(), f"missing {f}"
     v004 = (tmp_path / "migrations" / "V004__create_constraints.sql").read_text()
-    assert "fk_address_customer_id" in v004
+    assert "fk_address__customer_id" in v004
     assert "chk_customer_email" in v004
 
 
