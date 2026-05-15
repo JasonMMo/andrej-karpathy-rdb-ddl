@@ -60,11 +60,11 @@ def test_gather_fks_locates_owner_when_fk_on_to_entity():
     fks = _gather_foreign_keys(bp, by_name)
     assert len(fks) == 1
     fk = fks[0]
-    assert fk["name"] == "fk_address_customer_id"
+    assert fk["name"] == "fk_address__customer_id"
     assert fk["src_table"] == "address"
-    assert fk["column"] == "customer_id"
+    assert fk["columns"] == ["customer_id"]
     assert fk["ref_table"] == "customer"
-    assert fk["ref_column"] == "id"
+    assert fk["ref_columns"] == ["id"]
     assert fk["on_delete"] == "CASCADE"
 
 
