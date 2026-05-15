@@ -1,6 +1,8 @@
+import textwrap
+
 import pytest
 
-from preset_catalog import PRESETS, _load_presets, is_preset
+from preset_catalog import PRESETS, _load_presets, _merge_global_catalog, _parse_global_seed, is_preset
 
 
 def test_preset_marker_wins():
@@ -72,3 +74,82 @@ def test_loader_empty_domain_allowed(tmp_path):
     p.write_text("version: 1\ndomains:\n  empty:\n", encoding="utf-8")
     out = _load_presets(p)
     assert out == {"empty": set()}
+
+
+# --- Global catalog merge tests --------------------------------------------
+
+GLOBAL_SEED = textwrap.dedent("""\
+    ---
+    preset: 고객관리
+    version: 2
+    ---
+
+    ### vip_customer
+    ```yaml
+    type: entity
+    name: vip_customer
+    columns:
+      - { name: id, type: bigserial, pk: true }
+    ```
+
+    ### loyalty_program
+    ```yaml
+    type: entity
+    name: loyalty_program
+    columns: []
+    ```
+""")
+
+
+def test_parse_global_seed_extracts_entity_names(tmp_path):
+    p = tmp_path / "고객관리.seed.md"
+    p.write_text(GLOBAL_SEED, encoding="utf-8")
+    assert _parse_global_seed(p) == {"vip_customer", "loyalty_program"}
+
+
+def test_parse_global_seed_missing_file_returns_empty(tmp_path):
+    assert _parse_global_seed(tmp_path / "nope.seed.md") == set()
+
+
+def test_parse_global_seed_skips_non_entity_blocks(tmp_path):
+    p = tmp_path / "x.seed.md"
+    p.write_text(textwrap.dedent("""\
+        ```yaml
+        type: concept
+        name: ignored
+        ```
+
+        ```yaml
+        type: entity
+        name: kept
+        ```
+    """), encoding="utf-8")
+    assert _parse_global_seed(p) == {"kept"}
+
+
+def test_merge_global_catalog_augments_existing_domain(tmp_path):
+    (tmp_path / "고객관리.seed.md").write_text(GLOBAL_SEED, encoding="utf-8")
+    local = {"고객관리": {"customer", "address"}}
+    out = _merge_global_catalog(local, tmp_path)
+    assert out["고객관리"] == {"customer", "address", "vip_customer", "loyalty_program"}
+
+
+def test_merge_global_catalog_adds_new_domain(tmp_path):
+    (tmp_path / "신규도메인.seed.md").write_text(GLOBAL_SEED, encoding="utf-8")
+    local = {"고객관리": {"customer"}}
+    out = _merge_global_catalog(local, tmp_path)
+    assert "신규도메인" in out
+    assert out["고객관리"] == {"customer"}  # untouched
+
+
+def test_merge_global_catalog_missing_dir_returns_input(tmp_path):
+    local = {"고객관리": {"customer"}}
+    out = _merge_global_catalog(local, tmp_path / "nope")
+    assert out == local
+
+
+def test_merge_global_catalog_no_local_mutation(tmp_path):
+    (tmp_path / "고객관리.seed.md").write_text(GLOBAL_SEED, encoding="utf-8")
+    local = {"고객관리": {"customer"}}
+    _merge_global_catalog(local, tmp_path)
+    assert local == {"고객관리": {"customer"}}, "local input must not be mutated"
