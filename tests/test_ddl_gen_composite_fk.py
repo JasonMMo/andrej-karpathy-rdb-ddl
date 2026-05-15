@@ -70,4 +70,5 @@ def test_generate_ddl_composite_fk_emits_multi_column_constraint(tmp_path):
     generate_ddl(blueprint, tmp_path, dialect="postgres")
     sql = (tmp_path / "migrations" / "V004__create_constraints.sql").read_text(encoding="utf-8")
     assert "FOREIGN KEY (order_id, seq)" in sql
+    assert "REFERENCES app.order_hdr(id)" in sql
     assert "ON DELETE CASCADE" in sql
