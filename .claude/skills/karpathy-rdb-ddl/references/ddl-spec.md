@@ -18,6 +18,7 @@
 | `business_rules[].enforced_by` | string SQL → emitted as `CHECK`; list form (constraint/index names) skipped |
 | `business_rules[].id` or `name` | used as constraint name (falls back to `chk_rule`) |
 | `business_rules[].applies_to` | entity that receives the `CHECK` |
+| `entities[].extends` | resolved at Stage 1 (`rdb_index.resolve_extends`) — Stage 2 sees the merged columns/indexes/constraints and treats the entity as plain. The `extends` field itself is stripped before emission. |
 
 ## Outputs (under `--out`, default `./db/`)
 - `migrations/V001__create_schema.sql` — CREATE SCHEMA statements
