@@ -10,9 +10,9 @@
 | `version` | must equal `1`; loader rejects others |
 | `project` | rendered in `ddl-report.md` header |
 | `domains[].entities[]` | maps entity → domains (preset seed selection). Legacy `entity.domain` still accepted. |
-| `entities[].columns[]` | drives `CREATE TABLE`, JPA fields, seed columns. `nullable: false` emits `NOT NULL` (legacy `null:` key tolerated). |
+| `entities[].columns[]` | drives `CREATE TABLE`, JPA fields, seed columns. `nullable: false` emits `NOT NULL` (legacy `null:` key tolerated). Two or more `pk: true` columns emit a table-level `PRIMARY KEY (a, b, ...)` constraint instead of inline `PRIMARY KEY` (v0.3+). |
 | `entities[].indexes[]` | drives `V003__create_indexes.sql` |
-| `relations[].fk.column` | FK column name. Legacy flat `fk: <column>` still accepted. |
+| `relations[].fk.column` | FK column name. `string` OR `list` (v0.3+ composite FK). List form emits multi-column `FOREIGN KEY (a, b) REFERENCES parent(pk_a, pk_b)` with positional pairing against the parent's PK. Single-column case keeps legacy SQL output. Legacy flat `fk: <column>` still accepted. Constraint name: `fk_<table>__<col1>_<col2>` (`__` separates table from columns; columns joined by `_`). |
 | `relations[].fk.on_delete` | `restrict` (default) \| `cascade` \| `set_null` \| `no_action` |
 | `relations[].cardinality` | informational only; FK ownership is resolved by which side holds the column |
 | `business_rules[].enforced_by` | string SQL → emitted as `CHECK`; list form (constraint/index names) skipped |
