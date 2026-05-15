@@ -1,5 +1,5 @@
 """복합 FK constraint 생성 테스트."""
-from ddl_gen import _fk_columns, _gather_foreign_keys
+from ddl_gen import _fk_columns, _gather_foreign_keys, generate_ddl
 
 
 def test_fk_columns_single_string():
@@ -40,3 +40,34 @@ def test_gather_composite_fk_constraint_name_and_columns():
     assert fks[0]["columns"] == ["user_id"]
     assert fks[0]["ref_columns"] == ["user_id"]
     assert fks[0]["name"] == "fk_user_role__user_id"
+
+
+def test_generate_ddl_composite_fk_emits_multi_column_constraint(tmp_path):
+    """Composite FK with two columns renders a comma-joined column list in SQL."""
+    # order_item owns (order_id, seq) FK columns; order_hdr is the parent with PK (id).
+    # FK column names differ from the parent PK so ownership is unambiguous.
+    blueprint = {
+        "project": {"name": "t"},
+        "entities": [
+            {"name": "order_hdr", "schema": "app", "table": "order_hdr",
+             "columns": [
+                 {"name": "id", "type": "bigint", "pk": True},
+                 {"name": "customer_id", "type": "bigint"},
+             ]},
+            {"name": "order_item", "schema": "app", "table": "order_item",
+             "columns": [
+                 {"name": "id", "type": "bigint", "pk": True},
+                 {"name": "order_id", "type": "bigint"},
+                 {"name": "seq", "type": "int"},
+                 {"name": "qty", "type": "int"},
+             ]},
+        ],
+        "relations": [{
+            "from": "order_hdr", "to": "order_item",
+            "fk": {"column": ["order_id", "seq"], "on_delete": "cascade"},
+        }],
+    }
+    generate_ddl(blueprint, tmp_path, dialect="postgres")
+    sql = (tmp_path / "migrations" / "V004__create_constraints.sql").read_text(encoding="utf-8")
+    assert "FOREIGN KEY (order_id, seq)" in sql
+    assert "ON DELETE CASCADE" in sql
