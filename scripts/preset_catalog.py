@@ -1,10 +1,42 @@
-PRESETS = {
-    "고객관리": {"customer", "address", "contact_log"},
-    "주문관리": {"sales_order", "order_item", "payment"},
-    "재고관리": {"product", "sku", "warehouse", "stock"},
-    "인사관리": {"employee", "department", "position"},
-    "재무관리": {"account", "fiscal_period", "ledger_entry"},
-}
+"""Preset domain↔entity catalog.
+
+`PRESETS` is loaded from `<repo_root>/catalogs/preset-catalog.yaml` at module
+import time so users can extend the catalog without touching Python code.
+The public API (the `PRESETS` name and `is_preset()` signature) is unchanged
+to keep callers (ddl_compile, seed_gen, blueprint_spec tests) untouched.
+"""
+from pathlib import Path
+import yaml
+
+_CATALOG_PATH = Path(__file__).resolve().parent.parent / "catalogs" / "preset-catalog.yaml"
+
+
+def _load_presets(path: Path) -> dict:
+    if not path.exists():
+        raise FileNotFoundError(
+            f"preset catalog not found at {path}. "
+            f"Create it with `version: 1` and a `domains:` map."
+        )
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{path}: top-level must be a mapping, got {type(data).__name__}")
+    if data.get("version") != 1:
+        raise ValueError(f"{path}: unsupported catalog version {data.get('version')!r} (expected 1)")
+    domains = data.get("domains") or {}
+    if not isinstance(domains, dict):
+        raise ValueError(f"{path}: `domains` must be a mapping")
+    out: dict[str, set[str]] = {}
+    for dn, entities in domains.items():
+        if entities is None:
+            out[dn] = set()
+            continue
+        if not isinstance(entities, list):
+            raise ValueError(f"{path}: domain {dn!r} entities must be a list")
+        out[dn] = {str(e) for e in entities}
+    return out
+
+
+PRESETS: dict[str, set[str]] = _load_presets(_CATALOG_PATH)
 
 
 def build_domain_index(blueprint: dict) -> dict:
