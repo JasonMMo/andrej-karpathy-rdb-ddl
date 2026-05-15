@@ -1,0 +1,23 @@
+version: 1
+domains:
+  고객관리:
+    - customer
+    - address
+    - contact_log
+  주문관리:
+    - sales_order
+    - order_item
+    - payment
+  재고관리:
+    - product
+    - sku
+    - warehouse
+    - stock
+  인사관리:
+    - employee
+    - department
+    - position
+  재무관리:
+    - account
+    - fiscal_period
+    - ledger_entry
