@@ -35,6 +35,7 @@ def test_yaml_loaded_all_5_domains():
     assert set(PRESETS.keys()) == {
         "고객관리", "주문관리", "재고관리", "인사관리", "재무관리",
         "게시판", "권한관리", "공통코드",
+        "결재", "알림", "파일관리",
     }
     # Growth-2D: 게시판 new domain (community/CMS pattern)
     assert PRESETS["게시판"] == {"board", "post", "comment", "attachment"}
@@ -52,6 +53,18 @@ def test_yaml_loaded_all_5_domains():
     }
     # Growth-10: 공통코드 new domain (lookup table — every enum varchar should FK here)
     assert PRESETS["공통코드"] == {"code_group", "code", "code_history"}
+    # Growth-11: 결재 new domain (한국 SI 필수 — workflow + line + audit)
+    assert PRESETS["결재"] == {
+        "approval_template", "approval_request", "approval_line", "approval_history",
+    }
+    # Growth-12: 알림 new domain (event → user 통지 단일 경로)
+    assert PRESETS["알림"] == {
+        "notification_template", "notification", "notification_subscription", "notification_log",
+    }
+    # Growth-13: 파일관리 new domain (binary asset + ACL + access log)
+    assert PRESETS["파일관리"] == {
+        "file_folder", "file", "file_acl", "file_access_log",
+    }
 
 
 def test_loader_missing_file(tmp_path):
