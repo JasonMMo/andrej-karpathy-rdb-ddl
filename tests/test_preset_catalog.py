@@ -39,6 +39,8 @@ def test_yaml_loaded_all_5_domains():
     assert PRESETS["고객관리"] == {"customer", "customer_category", "address", "contact_log"}
     # Growth-2A: order_status_history added to 주문관리 (audit pattern)
     assert PRESETS["주문관리"] == {"sales_order", "order_item", "payment", "order_status_history"}
+    # Growth-2C: attendance added to 인사관리 (daily transaction pattern)
+    assert PRESETS["인사관리"] == {"employee", "department", "position", "attendance"}
 
 
 def test_loader_missing_file(tmp_path):
