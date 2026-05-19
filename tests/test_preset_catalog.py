@@ -34,6 +34,8 @@ def test_yaml_loaded_all_5_domains():
     """YAML catalog must round-trip the original 5 hardcoded domains."""
     assert set(PRESETS.keys()) == {"고객관리", "주문관리", "재고관리", "인사관리", "재무관리"}
     assert PRESETS["재고관리"] == {"product", "sku", "warehouse", "stock"}
+    # Growth-1: customer_category added to 고객관리 (catalog deepening)
+    assert PRESETS["고객관리"] == {"customer", "customer_category", "address", "contact_log"}
 
 
 def test_loader_missing_file(tmp_path):
