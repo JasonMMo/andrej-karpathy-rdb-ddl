@@ -9,6 +9,7 @@ domains:
     - sales_order
     - order_item
     - payment
+    - order_status_history
   재고관리:
     - product
     - sku
