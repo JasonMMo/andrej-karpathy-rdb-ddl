@@ -33,7 +33,8 @@ def test_unknown_entity_in_known_domain():
 def test_yaml_loaded_all_5_domains():
     """YAML catalog must round-trip the original 5 hardcoded domains."""
     assert set(PRESETS.keys()) == {"고객관리", "주문관리", "재고관리", "인사관리", "재무관리"}
-    assert PRESETS["재고관리"] == {"product", "sku", "warehouse", "stock"}
+    # Growth-2B: stock_movement added to 재고관리 (입출고 audit pattern)
+    assert PRESETS["재고관리"] == {"product", "sku", "warehouse", "stock", "stock_movement"}
     # Growth-1: customer_category added to 고객관리 (catalog deepening)
     assert PRESETS["고객관리"] == {"customer", "customer_category", "address", "contact_log"}
     # Growth-2A: order_status_history added to 주문관리 (audit pattern)
