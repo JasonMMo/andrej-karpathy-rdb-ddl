@@ -36,6 +36,8 @@ def test_yaml_loaded_all_5_domains():
     assert PRESETS["재고관리"] == {"product", "sku", "warehouse", "stock"}
     # Growth-1: customer_category added to 고객관리 (catalog deepening)
     assert PRESETS["고객관리"] == {"customer", "customer_category", "address", "contact_log"}
+    # Growth-2A: order_status_history added to 주문관리 (audit pattern)
+    assert PRESETS["주문관리"] == {"sales_order", "order_item", "payment", "order_status_history"}
 
 
 def test_loader_missing_file(tmp_path):
