@@ -31,8 +31,10 @@ def test_unknown_entity_in_known_domain():
 
 
 def test_yaml_loaded_all_5_domains():
-    """YAML catalog must round-trip the original 5 hardcoded domains + Growth-2D 게시판."""
-    assert set(PRESETS.keys()) == {"고객관리", "주문관리", "재고관리", "인사관리", "재무관리", "게시판"}
+    """YAML catalog must round-trip the original 5 hardcoded domains + Growth-2D/Growth-9 additions."""
+    assert set(PRESETS.keys()) == {
+        "고객관리", "주문관리", "재고관리", "인사관리", "재무관리", "게시판", "권한관리",
+    }
     # Growth-2D: 게시판 new domain (community/CMS pattern)
     assert PRESETS["게시판"] == {"board", "post", "comment", "attachment"}
     # Growth-2B: stock_movement added to 재고관리 (입출고 audit pattern)
@@ -43,6 +45,10 @@ def test_yaml_loaded_all_5_domains():
     assert PRESETS["주문관리"] == {"sales_order", "order_item", "payment", "order_status_history"}
     # Growth-2C: attendance added to 인사관리 (daily transaction pattern)
     assert PRESETS["인사관리"] == {"employee", "department", "position", "attendance"}
+    # Growth-9: 권한관리 new domain (RBAC foundation — every domain depends on app_user)
+    assert PRESETS["권한관리"] == {
+        "app_user", "role", "permission", "user_role", "role_permission", "login_audit",
+    }
 
 
 def test_loader_missing_file(tmp_path):
