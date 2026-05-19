@@ -37,3 +37,7 @@ domains:
     - user_role
     - role_permission
     - login_audit
+  공통코드:
+    - code_group
+    - code
+    - code_history
