@@ -54,7 +54,26 @@ HSQLDB = Dialect(
     regex_op=None,
 )
 
-_REGISTRY = {"postgres": POSTGRES, "hsqldb": HSQLDB}
+MYSQL = Dialect(
+    name="mysql",
+    template_dir="mysql",
+    schema_strategy="native",
+    type_map={
+        "bigserial": "BIGINT AUTO_INCREMENT",
+        "bigint": "BIGINT",
+        "integer": "INT",
+        "varchar": "VARCHAR",
+        "text": "TEXT",
+        "boolean": "TINYINT(1)",
+        "timestamp": "DATETIME",
+        "date": "DATE",
+        "numeric": "DECIMAL",
+    },
+    idempotent_insert="INSERT IGNORE",
+    regex_op="REGEXP",
+)
+
+_REGISTRY = {"postgres": POSTGRES, "hsqldb": HSQLDB, "mysql": MYSQL}
 
 
 def get_dialect(name: str) -> Dialect:
