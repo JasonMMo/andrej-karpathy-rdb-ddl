@@ -53,7 +53,7 @@ def main(argv=None) -> int:
     ap.add_argument("blueprint", help="path to _blueprint.yaml")
     ap.add_argument("--out", default="./db", help="output directory (default ./db)")
     ap.add_argument("--package", default="com.example.<schema>", help="Java package template")
-    ap.add_argument("--dialect", default="postgres", choices=["postgres", "hsqldb"])
+    ap.add_argument("--dialect", default="postgres", choices=["postgres", "hsqldb", "mysql"])
     args = ap.parse_args(argv)
 
     try:
