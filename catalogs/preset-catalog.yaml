@@ -2,6 +2,7 @@ version: 1
 domains:
   고객관리:
     - customer
+    - customer_category
     - address
     - contact_log
   주문관리:
