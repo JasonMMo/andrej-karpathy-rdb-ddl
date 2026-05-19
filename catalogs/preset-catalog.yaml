@@ -20,6 +20,7 @@ domains:
     - employee
     - department
     - position
+    - attendance
   재무관리:
     - account
     - fiscal_period
