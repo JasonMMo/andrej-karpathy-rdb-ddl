@@ -25,3 +25,8 @@ domains:
     - account
     - fiscal_period
     - ledger_entry
+  게시판:
+    - board
+    - post
+    - comment
+    - attachment
