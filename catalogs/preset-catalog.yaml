@@ -15,6 +15,7 @@ domains:
     - sku
     - warehouse
     - stock
+    - stock_movement
   인사관리:
     - employee
     - department
