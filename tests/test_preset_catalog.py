@@ -33,7 +33,8 @@ def test_unknown_entity_in_known_domain():
 def test_yaml_loaded_all_5_domains():
     """YAML catalog must round-trip the original 5 hardcoded domains + Growth-2D/Growth-9 additions."""
     assert set(PRESETS.keys()) == {
-        "고객관리", "주문관리", "재고관리", "인사관리", "재무관리", "게시판", "권한관리",
+        "고객관리", "주문관리", "재고관리", "인사관리", "재무관리",
+        "게시판", "권한관리", "공통코드",
     }
     # Growth-2D: 게시판 new domain (community/CMS pattern)
     assert PRESETS["게시판"] == {"board", "post", "comment", "attachment"}
@@ -49,6 +50,8 @@ def test_yaml_loaded_all_5_domains():
     assert PRESETS["권한관리"] == {
         "app_user", "role", "permission", "user_role", "role_permission", "login_audit",
     }
+    # Growth-10: 공통코드 new domain (lookup table — every enum varchar should FK here)
+    assert PRESETS["공통코드"] == {"code_group", "code", "code_history"}
 
 
 def test_loader_missing_file(tmp_path):
