@@ -41,3 +41,18 @@ domains:
     - code_group
     - code
     - code_history
+  결재:
+    - approval_template
+    - approval_request
+    - approval_line
+    - approval_history
+  알림:
+    - notification_template
+    - notification
+    - notification_subscription
+    - notification_log
+  파일관리:
+    - file_folder
+    - file
+    - file_acl
+    - file_access_log
