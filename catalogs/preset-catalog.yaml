@@ -37,6 +37,8 @@ domains:
     - user_role
     - role_permission
     - login_audit
+    - oauth_account
+    - refresh_token
   공통코드:
     - code_group
     - code
