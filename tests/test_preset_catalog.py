@@ -36,6 +36,7 @@ def test_yaml_loaded_all_5_domains():
         "고객관리", "주문관리", "재고관리", "인사관리", "재무관리",
         "게시판", "권한관리", "공통코드",
         "결재", "알림", "파일관리",
+        "영업관리",
     }
     # Growth-2D: 게시판 new domain (community/CMS pattern)
     assert PRESETS["게시판"] == {"board", "post", "comment", "attachment"}
@@ -66,6 +67,12 @@ def test_yaml_loaded_all_5_domains():
     # Growth-13: 파일관리 new domain (binary asset + ACL + access log)
     assert PRESETS["파일관리"] == {
         "file_folder", "file", "file_acl", "file_access_log",
+    }
+    # Growth-21b: 영업관리 new domain (CRM pipeline — lead → opportunity → activity,
+    # contact_person as customer-side lookup). FKs into 고객관리.customer +
+    # 권한관리.app_user enable cross-domain RBAC ownership guards.
+    assert PRESETS["영업관리"] == {
+        "lead", "opportunity", "sales_activity", "contact_person",
     }
 
 
