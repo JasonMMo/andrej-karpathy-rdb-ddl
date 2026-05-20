@@ -7,13 +7,44 @@ from toposort import topo_sort
 TEMPLATE_ROOT = pathlib.Path(__file__).resolve().parent.parent / ".claude" / "skills" / "karpathy-rdb-ddl" / "templates"
 
 
+_SQL_RAW_DEFAULTS = {
+    "CURRENT_TIMESTAMP", "CURRENT_DATE", "CURRENT_TIME",
+    "NOW()", "NULL", "TRUE", "FALSE",
+}
+
+
+def _sql_default(value):
+    """Render a YAML-declared default safely across dialects.
+
+    Numbers/bools/SQL function-calls render raw; bare strings are
+    single-quoted (Postgres rejects unquoted identifiers in DEFAULT,
+    e.g. `DEFAULT pending` — must be `DEFAULT 'pending'`).
+    """
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "TRUE" if value else "FALSE"
+    if isinstance(value, (int, float)):
+        return str(value)
+    s = str(value).strip()
+    if not s:
+        return ""
+    if s.endswith(")"):
+        return s
+    if s.upper() in _SQL_RAW_DEFAULTS:
+        return s.upper()
+    return "'" + s.replace("'", "''") + "'"
+
+
 def _env(dialect_dir: str) -> Environment:
-    return Environment(
+    env = Environment(
         loader=FileSystemLoader(str(TEMPLATE_ROOT / dialect_dir)),
         undefined=StrictUndefined,
         trim_blocks=True,
         lstrip_blocks=True,
     )
+    env.filters["sql_default"] = _sql_default
+    return env
 
 
 def _normalize_columns(entity: dict, dialect) -> list:
