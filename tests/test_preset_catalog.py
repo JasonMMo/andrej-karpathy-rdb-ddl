@@ -36,7 +36,7 @@ def test_yaml_loaded_all_5_domains():
         "고객관리", "주문관리", "재고관리", "인사관리", "재무관리",
         "게시판", "권한관리", "공통코드",
         "결재", "알림", "파일관리",
-        "영업관리",
+        "영업관리", "공급망",
     }
     # Growth-2D: 게시판 new domain (community/CMS pattern)
     assert PRESETS["게시판"] == {"board", "post", "comment", "attachment"}
@@ -73,6 +73,14 @@ def test_yaml_loaded_all_5_domains():
     # 권한관리.app_user enable cross-domain RBAC ownership guards.
     assert PRESETS["영업관리"] == {
         "lead", "opportunity", "sales_activity", "contact_person",
+    }
+    # Growth-22: 공급망 (SCM) — supplier·purchase_order (MD+workflow) → goods_receipt (RO).
+    # Cross-domain FKs to 재고관리.sku/warehouse + 권한관리.app_user via concept-only
+    # declarations (Growth-21b-4 mechanism).
+    assert PRESETS["공급망"] == {
+        "supplier", "supplier_contact",
+        "purchase_order", "purchase_order_item",
+        "goods_receipt", "goods_receipt_item",
     }
 
 
