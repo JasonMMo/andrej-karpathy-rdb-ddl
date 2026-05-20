@@ -3,7 +3,7 @@
 {%- set pk_cols = e.columns | selectattr('pk') | list %}
 CREATE TABLE IF NOT EXISTS {{ e.schema }}.{{ e.table }} (
 {%- for col in e.columns %}
-    {{ col.name }} {{ col.sql_type }}{% if col.pk and pk_cols|length == 1 %} PRIMARY KEY{% endif %}{% if col.nullable == False %} NOT NULL{% endif %}{% if col.default is defined and col.default %} DEFAULT {{ col.default }}{% endif %}{% if not loop.last or pk_cols|length > 1 %},{% endif %}
+    {{ col.name }} {{ col.sql_type }}{% if col.pk and pk_cols|length == 1 %} PRIMARY KEY{% endif %}{% if col.nullable == False %} NOT NULL{% endif %}{% if col.default is defined and col.default is not none and col.default != '' %} DEFAULT {{ col.default | sql_default }}{% endif %}{% if not loop.last or pk_cols|length > 1 %},{% endif %}
 {%- endfor %}
 {%- if pk_cols|length > 1 %}
     PRIMARY KEY ({{ pk_cols | map(attribute='name') | join(', ') }})
