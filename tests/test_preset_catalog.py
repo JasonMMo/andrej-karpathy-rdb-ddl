@@ -47,9 +47,11 @@ def test_yaml_loaded_all_5_domains():
     assert PRESETS["주문관리"] == {"sales_order", "order_item", "payment", "order_status_history"}
     # Growth-2C: attendance added to 인사관리 (daily transaction pattern)
     assert PRESETS["인사관리"] == {"employee", "department", "position", "attendance"}
-    # Growth-9: 권한관리 new domain (RBAC foundation — every domain depends on app_user)
+    # Growth-9 + Growth-21a-1: 권한관리 RBAC foundation + OAuth2 link entities
+    # (oauth_account/refresh_token added to support standalone shell OAuth2 + JWT flow)
     assert PRESETS["권한관리"] == {
         "app_user", "role", "permission", "user_role", "role_permission", "login_audit",
+        "oauth_account", "refresh_token",
     }
     # Growth-10: 공통코드 new domain (lookup table — every enum varchar should FK here)
     assert PRESETS["공통코드"] == {"code_group", "code", "code_history"}
