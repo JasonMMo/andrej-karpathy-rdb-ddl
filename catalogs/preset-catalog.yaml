@@ -63,3 +63,10 @@ domains:
     - opportunity
     - sales_activity
     - contact_person
+  공급망:
+    - supplier
+    - supplier_contact
+    - purchase_order
+    - purchase_order_item
+    - goods_receipt
+    - goods_receipt_item
