@@ -58,3 +58,8 @@ domains:
     - file
     - file_acl
     - file_access_log
+  영업관리:
+    - lead
+    - opportunity
+    - sales_activity
+    - contact_person
