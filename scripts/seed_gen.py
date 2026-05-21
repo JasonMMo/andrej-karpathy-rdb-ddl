@@ -35,11 +35,15 @@ def generate_seed(entities, out_dir: pathlib.Path, dialect: str = "postgres",
     for e in entities:
         if not is_preset(e, domain_index):
             continue
-        non_pk_cols = [c for c in e.get("columns") or [] if not c.get("pk")]
+        all_cols = list(e.get("columns") or [])
+        non_pk_cols = [c for c in all_cols if not c.get("pk")]
         if not non_pk_cols:
             continue
-        col_names = [c["name"] for c in non_pk_cols]
-        pk_col = next((c["name"] for c in e.get("columns") or [] if c.get("pk")), "id")
-        rows = [[_sample_value(c, i) for c in non_pk_cols] for i in range(3)]
+        # Include PK in seed tuple so HSQLDB MERGE `ON tbl.id = s.id` resolves
+        # and IDENTITY 0-base trap is bypassed across all dialects (Growth-32).
+        seed_cols = all_cols
+        col_names = [c["name"] for c in seed_cols]
+        pk_col = next((c["name"] for c in seed_cols if c.get("pk")), "id")
+        rows = [[_sample_value(c, i) for c in seed_cols] for i in range(3)]
         rendered = tpl.render(entity=e, columns=col_names, rows=rows, pk_column=pk_col)
         (out_dir / "seed" / f"01_{e['table']}_sample.sql").write_text(rendered, encoding="utf-8")
