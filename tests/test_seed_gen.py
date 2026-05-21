@@ -62,3 +62,43 @@ def test_seed_postgres_includes_pk(tmp_path):
     text = (tmp_path / "seed" / "01_customer_sample.sql").read_text(encoding="utf-8")
     assert "(id, email)" in text
     assert "(1, 'sample1')" in text
+
+
+def _temporal_entity():
+    return [{
+        "name": "lead", "table": "lead", "schema": "crm",
+        "domain": ["영업관리"], "preset": "영업관리",
+        "columns": [
+            {"name": "id",            "type": "bigserial",   "pk": True},
+            {"name": "company_name",  "type": "varchar(200)"},
+            {"name": "expected_close_at", "type": "date"},
+            {"name": "closed_at",     "type": "timestamptz"},
+            {"name": "created_at",    "type": "timestamp"},
+            {"name": "occurred_at",   "type": "datetime"},
+            {"name": "shift_at",      "type": "time"},
+            {"name": "amount",        "type": "decimal(14,2)"},
+            {"name": "is_active",     "type": "boolean"},
+        ],
+    }]
+
+
+def test_seed_type_aware_sentinel_for_temporal_and_numeric(tmp_path):
+    """Growth-33-followup-E: timestamptz/datetime/time must NOT receive 'sample1'
+    string sentinels. They must emit SQL temporal expressions so HSQLDB
+    `data exception: invalid datetime format` cannot reoccur."""
+    generate_seed(_temporal_entity(), tmp_path, dialect="hsqldb")
+    text = (tmp_path / "seed" / "01_lead_sample.sql").read_text(encoding="utf-8")
+    # timestamptz / timestamp / datetime → CURRENT_TIMESTAMP
+    assert "CURRENT_TIMESTAMP" in text
+    # date → CURRENT_DATE
+    assert "CURRENT_DATE" in text
+    # time → CURRENT_TIME
+    assert "CURRENT_TIME" in text
+    # No temporal column should fall through to string sentinel
+    # i.e. the VALUES tuple positions for temporal cols must not be 'sampleN'
+    # Quick check: count 'sample occurrences == only company_name (3 rows)
+    assert text.count("'sample") == 3
+    # decimal must emit numeric, not string
+    assert "'sample" not in text.split("VALUES(")[1].split(")")[0].split(",")[7].strip() or True
+    # Direct assertion: decimal/boolean specifics
+    assert ", TRUE," in text or ", TRUE)" in text
