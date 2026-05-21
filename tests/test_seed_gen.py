@@ -40,3 +40,25 @@ def test_seed_hsqldb_uses_merge(tmp_path):
     f = tmp_path / "seed" / "01_customer_sample.sql"
     text = f.read_text(encoding="utf-8")
     assert "MERGE INTO crm.customer" in text
+
+
+def test_seed_hsqldb_explicit_id_pattern(tmp_path):
+    """Growth-32: seed must include PK in MERGE tuple so `ON tbl.id = s.id`
+    resolves AND HSQLDB IDENTITY 0-base trap is bypassed."""
+    generate_seed(make_entities(), tmp_path, dialect="hsqldb")
+    text = (tmp_path / "seed" / "01_customer_sample.sql").read_text(encoding="utf-8")
+    # PK column name appears in AS s(...) tuple
+    assert "AS s(id, email)" in text
+    # Explicit PK values 1,2,3 (not 0,1,2 which would result from IDENTITY)
+    assert "VALUES(1, 'sample1')" in text
+    assert "VALUES(2, 'sample2')" in text
+    assert "VALUES(3, 'sample3')" in text
+
+
+def test_seed_postgres_includes_pk(tmp_path):
+    """Explicit PK is harmless under ON CONFLICT DO NOTHING and makes
+    cross-FK seeds deterministic across dialects."""
+    generate_seed(make_entities(), tmp_path, dialect="postgres")
+    text = (tmp_path / "seed" / "01_customer_sample.sql").read_text(encoding="utf-8")
+    assert "(id, email)" in text
+    assert "(1, 'sample1')" in text
