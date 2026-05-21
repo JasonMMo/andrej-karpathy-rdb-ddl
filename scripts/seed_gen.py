@@ -9,12 +9,17 @@ TEMPLATE_ROOT = pathlib.Path(__file__).resolve().parent.parent / ".claude" / "sk
 
 def _sample_value(col: dict, row_idx: int) -> str:
     base = col.get("type", "").split("(")[0].lower()
-    if base in {"bigserial", "bigint", "integer", "numeric"}:
+    if base in {"bigserial", "serial", "bigint", "integer", "int", "int2", "int4", "int8",
+                "smallint", "numeric", "decimal", "real", "double", "float"}:
         return str(row_idx + 1)
     if base == "boolean":
         return "TRUE"
-    if base in {"timestamp", "date"}:
-        return "CURRENT_TIMESTAMP" if base == "timestamp" else "CURRENT_DATE"
+    if base in {"timestamp", "timestamptz", "datetime"}:
+        return "CURRENT_TIMESTAMP"
+    if base == "date":
+        return "CURRENT_DATE"
+    if base in {"time", "timetz"}:
+        return "CURRENT_TIME"
     return f"'sample{row_idx + 1}'"
 
 
