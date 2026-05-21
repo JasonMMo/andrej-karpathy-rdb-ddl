@@ -24,6 +24,7 @@ domains:
   재무관리:
     - account
     - fiscal_period
+    - journal_entry
     - ledger_entry
   게시판:
     - board
